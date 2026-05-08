@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-plugins",
+  "owner": {
+    "name": "Shane Orr",
+    "email": ""
+  },
+  "description": "",
+  "plugins": [
+    {
+      "name": "example-plugin",
+      "source": "./plugins/example-plugin",
+      "description": "An example plugin",
+      "version": "1.0.0"
+    }
+  ]
+}
