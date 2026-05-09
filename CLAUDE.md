@@ -22,5 +22,5 @@ A personal Claude Code plugin marketplace hosted on GitHub. Plugins here are bui
 
 ```
 /plugin marketplace add shanejorr/claude-plugins
-/plugin install <plugin-name>@claude-plugins
+/plugin install <plugin-name>@shanejorr-plugins
 ```

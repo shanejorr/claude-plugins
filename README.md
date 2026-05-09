@@ -17,5 +17,5 @@ A Claude Code plugin marketplace.
 ## Usage
 
 ```
-/plugin install <plugin-name>@claude-plugins
+/plugin install <plugin-name>@shanejorr-plugins
 ```
