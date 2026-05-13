@@ -1,6 +1,8 @@
 ---
 name: create-lesson
 description: Generate a full numbered English lesson for the tutoring project at /Users/shaneorr/Documents/English — creates the instructor lesson plan (Lesson_NN_teacher.pdf) in Teacher Materials/, a shared grammar/topic notes reference sheet, and per-kid practice materials for Camilo and Luciana in Student Materials/Lesson_NN/. Use whenever Shane says "create lesson N", "build lesson N", "make lesson N", "generate lesson N", "prep lesson N", or any similar phrasing that references a specific lesson number. Trigger even if he only names the lesson number without enumerating the four artifacts — producing the complete set is the whole point of the skill.
+user-invocable: true
+disable-model-invocation: true
 ---
 
 # Create Lesson

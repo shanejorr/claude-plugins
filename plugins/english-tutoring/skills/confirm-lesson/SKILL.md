@@ -1,6 +1,8 @@
 ---
 name: confirm-lesson
 description: Confirm that a numbered lesson was actually taught and update the project's progress files for the English tutoring project at /Users/shaneorr/Documents/English. Updates Progress/coverage_tracker.md (grammar covered, interest rotation) and Progress/vocabulary_log.md (master list + by-lesson block) for the named lesson. Trigger when Shane says "confirm lesson N", "confirm-lesson N", "we taught lesson N", "mark lesson N as taught", "update tracker for lesson N", "log lesson N", or any similar phrasing that signals a specific lesson is now done. The lesson number is required.
+user-invocable: true
+disable-model-invocation: true
 ---
 
 # Confirm Lesson

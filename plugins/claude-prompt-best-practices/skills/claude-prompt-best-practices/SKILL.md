@@ -1,6 +1,8 @@
 ---
 name: claude-prompt-best-practices
 description: "Reference guide for writing effective prompts for Claude. Use this skill whenever asked how to prompt Claude, how to write better prompts, prompt engineering tips, or how to get better results from Claude. Contains the full official Anthropic prompt engineering documentation covering general principles, formatting, tool use, thinking/reasoning, agentic systems, and model-specific tuning for Claude Opus 4.7, Sonnet 4.6, and Opus 4.6. Last fetched from docs.claude.com on 2026-04-24."
+user-invocable: true
+disable-model-invocation: true
 ---
 
 # Claude Prompt Engineering Best Practices

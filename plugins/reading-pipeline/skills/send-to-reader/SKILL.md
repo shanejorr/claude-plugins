@@ -1,6 +1,8 @@
 ---
 name: send-to-reader
 description: "Upload a PDF, EPUB, or KEPUB file to the user's Google Drive folder that syncs to their e-reader (Kobo Color or reMarkable Paper Pro). Use this skill whenever the user wants to send a document to their e-reader, sync a file to Kobo or reMarkable, or 'put this on my e-reader'. Trigger phrases include 'send to my Kobo', 'send to my reMarkable', 'sync this to my e-reader', 'upload this to my reader', or any time the user has a .pdf / .epub / .kepub.epub file and mentions Kobo, reMarkable, or Google Drive sync. Asks which device if not specified."
+user-invocable: true
+disable-model-invocation: true
 ---
 
 # Send to Reader Skill

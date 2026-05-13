@@ -1,6 +1,8 @@
 ---
 name: summarize-research
 description: "Summarize an academic research paper for an intelligent non-specialist audience and save the summary as a Markdown or PDF file. Accepts the paper as a PDF, plain text, or a URL (arXiv, journal, blog). Use this skill whenever the user asks for a summary, explanation, breakdown, or review of a research paper, academic article, journal article, preprint, or scientific study. Trigger phrases include 'summarize this paper', 'explain this paper', 'what does this paper say', 'break down this study', 'summarize this article', or any time the user supplies a paper (PDF/URL/text) and wants it explained. Do NOT use for summarizing non-academic documents like reports, whitepapers, or news articles."
+user-invocable: true
+disable-model-invocation: true
 ---
 
 # Summarize Research Skill
