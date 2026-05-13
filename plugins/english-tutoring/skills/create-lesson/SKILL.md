@@ -38,6 +38,8 @@ If the schedule entry is clean and the rotation is balanced, skip the question. 
 
 Pitch everything to CEFR A1 unless the schedule says otherwise. When in doubt, aim at Luciana's level — she is the slower learner on paper and anxious about English. Camilo's IQ-report accommodations (chunking, visual aids, short dictations, varied evaluation formats) are good defaults for both.
 
+Zero-pad `NN` to two digits everywhere it appears in paths and filenames (`Lesson_05`, not `Lesson_5`).
+
 ### Lesson_NN_teacher.pdf — instructor lesson plan
 
 One shared document. Shane holds this while teaching. Include:
@@ -82,10 +84,10 @@ Never use adoption, foster, or biological-family history as topic material. Vary
 
 ## Workflow
 
-1. **Read.** `CLAUDE.md`, the schedule entry for N, `coverage_tracker.md`, `vocabulary_log.md`, and the last two or three `Lesson_NN/` folders.
+1. **Read.** `CLAUDE.md`, the schedule entry for N, `coverage_tracker.md`, `vocabulary_log.md`, and the last two or three `Lesson_NN/` folders. These reads are independent — issue them in parallel.
 2. **Confirm scope.** Ask only about real ambiguities; otherwise state briefly what you're proceeding with.
 3. **Draft in markdown first.** Create four `.md` drafts in your outputs directory. Markdown is faster to iterate and the `pdf` skill renders it cleanly.
-4. **Self-check each draft against CLAUDE.md:**
+4. **Self-check each draft before rendering.** Run through this list; revise the markdown if anything fails.
    - Vocabulary at or below A1 except glossed items
    - Spanish glosses use Latin American Spanish
    - Only grammar already taught (per `coverage_tracker.md`) plus the current target
@@ -93,13 +95,15 @@ Never use adoption, foster, or biological-family history as topic material. Vary
    - Right kid's interests in the right file; shared content reflects the rotation you chose
    - No forbidden topics
    - Length within A1 reading targets
-5. **Render to PDF.** Invoke the `pdf` skill to convert each markdown draft. Output paths:
+
+   Then re-read each reading passage as a true A1 Spanish-speaking beginner would, watching for: subordinate clauses where a simple sentence works, intermediate vocabulary with no gloss, tenses or structures the schedule says haven't been introduced yet, idioms or cultural references that need unpacking.
+5. **Render to PDF.** Invoke the `pdf` skill in render mode to convert each markdown draft. Output paths:
    - `/Users/shaneorr/Documents/English/Teacher Materials/Lesson_NN_teacher.pdf`
    - `/Users/shaneorr/Documents/English/Student Materials/Lesson_NN/Notes_<TOPIC>_SHARED.pdf`
    - `/Users/shaneorr/Documents/English/Student Materials/Lesson_NN/Materials_Camilo.pdf`
    - `/Users/shaneorr/Documents/English/Student Materials/Lesson_NN/Materials_Luciana.pdf`
    Create `Student Materials/Lesson_NN/` if it does not exist. `Teacher Materials/` is always flat — no subfolders. If files already exist, confirm before overwriting.
-6. **Upload PDFs to Google Drive.** Two separate Drive destinations — run the bundled script via Bash:
+6. **Upload PDFs to Google Drive.** Two separate Drive destinations — run the bundled script via Bash. Before running, substitute the tokens in the template below: `<N>` → lesson number (e.g. `5`), `NN` → zero-padded lesson number (e.g. `05`), `<TOPIC>` → the actual topic in upper snake case (e.g. `PRESENT_SIMPLE`).
 
    ```bash
    python3 "${CLAUDE_PLUGIN_ROOT}/skills/create-lesson/scripts/upload_to_drive.py" \
@@ -126,21 +130,8 @@ Never use adoption, foster, or biological-family history as topic material. Vary
    Parse the script's JSON output to get `subfolder_url` and include it in the final share message.
 7. **Share the files.** Return all four local paths (as `computer://` links if available), the Drive student subfolder URL, and the Drive teacher file URL. Note for Shane that the teacher plan goes to a separate Drive folder from the student materials. Do **not** update `coverage_tracker.md` or `vocabulary_log.md` — per CLAUDE.md those only get updated after Shane confirms the lesson was taught.
 
-## CEFR self-check (do this before rendering)
-
-Re-read each reading passage as if you are a true Spanish-speaking beginner. Red flags:
-
-- Subordinate clauses where a simple sentence works
-- Intermediate vocabulary with no gloss
-- Tenses or structures the schedule says haven't been introduced yet
-- Idioms or cultural references that need unpacking
-
-If you catch any of these, revise the markdown before rendering.
-
 ## What not to do
 
 - Don't write anything the kids will submit as their own work. These materials are for practice, not for them to turn in.
-- Don't update `coverage_tracker.md` or `vocabulary_log.md` preemptively.
-- Don't scatter files at the project root — student materials go in `Student Materials/Lesson_NN/`, teacher plan goes in `Teacher Materials/` (flat).
-- Don't delete or silently overwrite an existing lesson folder.
-- Don't put helper scripts in the lesson folder. If you need one, it goes in `Progress/scripts/`.
+- Don't update `coverage_tracker.md` or `vocabulary_log.md` preemptively — that's the `confirm-lesson` step.
+- If you need a one-off helper script, put it in `Progress/scripts/`, not in the lesson folder.

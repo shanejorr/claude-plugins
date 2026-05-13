@@ -112,7 +112,7 @@ Don't touch the `Quick-reference: words both kids should know cold` section auto
 3. **Extract** the grammar/skill label, the lesson topic, and the full glossed-vocabulary list (EN, ES-LatAm, part of speech, source).
 4. **Ask Shane** for the items in *Information to gather* via a single `AskUserQuestion` call. Skip anything already supplied in the invoking message.
 5. **Compute the diffs** for both files in your head before writing — placeholder replacements, new rows, balance increments.
-6. **Show Shane the diff summary.** Briefly list, before writing: the grammar row to be appended, vocabulary additions/updates, interest-rotation increment. Per CLAUDE.md, ask before overwriting if anything is non-trivial; for a clean append the summary itself counts as the heads-up. Wait for confirmation only if the changes look surprising.
+6. **Summarize the planned edits in one block, then apply them.** List the grammar row, vocabulary additions/updates, and rotation increment, then proceed to step 7 in the same turn. Pause only if a planned edit conflicts with an existing row — for example, a re-confirmation that would duplicate a `Lesson NN` entry already in the grammar table.
 7. **Apply edits** with `Edit`. Do **not** use `Write` — these files are living docs and rewriting them from scratch loses formatting. Use `Edit` with enough surrounding context to make each `old_string` unique.
 8. **Confirm** what was written: list the rows added/changed in each file, and report the new running-balance line.
 

@@ -22,6 +22,8 @@ Trigger phrases: "confirm lesson N", "we taught lesson N", "mark lesson N as tau
 
 `skills/create-lesson/scripts/upload_to_drive.py` uploads lesson PDFs to Google Drive using a service-account credential at `~/.config/create-lesson/service_account.json`. The full one-time setup (creating the service account, sharing the Drive folders with it) is documented in the script's docstring. Dependencies: `google-api-python-client`, `google-auth-httplib2`.
 
+Files uploaded this way are owned by the service account, not by Shane — they appear in his Drive via the shared parent folders but show the service-account email in the Owner column. Re-uploads update the existing file in place, so Drive share links stay stable.
+
 ## Project assumptions
 
 The skills assume the project layout described in `/Users/shaneorr/Documents/English/CLAUDE.md`:
