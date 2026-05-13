@@ -25,7 +25,7 @@ Before writing anything, gather context from the lesson and the existing tracker
 - `Progress/Lesson_Schedule.md` — the planned topic for lesson N. Useful as the default `Grammar / skill` label if the lesson plan is unambiguous.
 - `Teacher Materials/Lesson_NN_teacher.pdf` — the teacher plan. Pull the lesson topic, learning objectives, and any vocabulary the plan called out.
 - `Student Materials/Lesson_NN/Notes_<TOPIC>_SHARED.pdf` — the shared reference sheet (grammar point name, glossary if any).
-- `Student Materials/Lesson_NN/Materials_Camillo.pdf` and `Materials_Luciana.pdf` — vocabulary boxes are the authoritative list of glossed words for the lesson, plus the `Source` for each.
+- `Student Materials/Lesson_NN/Materials_Camilo.pdf` and `Materials_Luciana.pdf` — vocabulary boxes are the authoritative list of glossed words for the lesson, plus the `Source` for each.
 
 If the lesson folder or teacher PDF is missing, stop and tell Shane — don't fabricate a topic.
 
@@ -36,7 +36,7 @@ To extract text from the PDFs, invoke the `pdf` skill (read mode). Vocabulary bo
 After reading the lesson materials, ask Shane for the following in a **single** `AskUserQuestion` call. Keep it short — he runs the lesson, so this is the only thing he needs to type:
 
 1. **Date taught** (default to today). Convert any relative wording ("yesterday", "Friday") to an absolute date.
-2. **Interest-rotation tag** for the shared materials in this lesson — one of `L` / `C` / `S` / `B` (Luciana-leaning / Camillo-leaning / genuinely shared / blended). Default: read it off the lesson contents and propose a tag, let Shane override.
+2. **Interest-rotation tag** for the shared materials in this lesson — one of `L` / `C` / `S` / `B` (Luciana-leaning / Camilo-leaning / genuinely shared / blended). Default: read it off the lesson contents and propose a tag, let Shane override.
 
 If the user invocation already supplied any of these (e.g., "confirm lesson 5, taught today"), don't re-ask — fill them in and only ask for what's missing.
 
@@ -80,9 +80,9 @@ For each glossed word that appears in the lesson's per-kid PDFs or the shared no
 
 - **If the word is not yet in the master list:** append a row.
   ```
-  | <word EN> | <translation ES-LatAm> | <part of speech> | NN | <shared|Luciana|Camillo> | | <optional note> |
+  | <word EN> | <translation ES-LatAm> | <part of speech> | NN | <shared|Luciana|Camilo> | | <optional note> |
   ```
-  `Source` is `shared` if the word first appeared in `Notes_..._SHARED.pdf` or in both kids' materials; otherwise `Luciana` or `Camillo`.
+  `Source` is `shared` if the word first appeared in `Notes_..._SHARED.pdf` or in both kids' materials; otherwise `Luciana` or `Camilo`.
 - **If the word is already in the master list from a previous lesson:** do **not** add a new row. Instead, append `Lesson NN` to the `Seen again` column, comma-separated.
 
 Sort: keep the master list alphabetical by `Word (EN)` if it's already alphabetical; otherwise just append. Don't re-sort an unsorted table — that creates noisy diffs.

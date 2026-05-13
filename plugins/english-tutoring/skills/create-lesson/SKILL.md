@@ -1,6 +1,6 @@
 ---
 name: create-lesson
-description: Generate a full numbered English lesson for the tutoring project at /Users/shaneorr/Documents/English — creates the instructor lesson plan (Lesson_NN_teacher.pdf) in Teacher Materials/, a shared grammar/topic notes reference sheet, and per-kid practice materials for Camillo and Luciana in Student Materials/Lesson_NN/. Use whenever Shane says "create lesson N", "build lesson N", "make lesson N", "generate lesson N", "prep lesson N", or any similar phrasing that references a specific lesson number. Trigger even if he only names the lesson number without enumerating the four artifacts — producing the complete set is the whole point of the skill.
+description: Generate a full numbered English lesson for the tutoring project at /Users/shaneorr/Documents/English — creates the instructor lesson plan (Lesson_NN_teacher.pdf) in Teacher Materials/, a shared grammar/topic notes reference sheet, and per-kid practice materials for Camilo and Luciana in Student Materials/Lesson_NN/. Use whenever Shane says "create lesson N", "build lesson N", "make lesson N", "generate lesson N", "prep lesson N", or any similar phrasing that references a specific lesson number. Trigger even if he only names the lesson number without enumerating the four artifacts — producing the complete set is the whole point of the skill.
 ---
 
 # Create Lesson
@@ -9,7 +9,7 @@ End-to-end builder for one full lesson. Given a lesson number, produce exactly f
 
 1. `Lesson_NN_teacher.pdf` — instructor lesson plan (what Shane teaches from) → `Teacher Materials/`
 2. `Notes_<TOPIC>_SHARED.pdf` — shared reference sheet on the grammar/topic → `Student Materials/Lesson_NN/`
-3. `Materials_Camillo.pdf` — Camillo's personalized reading + practice + homework → `Student Materials/Lesson_NN/`
+3. `Materials_Camilo.pdf` — Camilo's personalized reading + practice + homework → `Student Materials/Lesson_NN/`
 4. `Materials_Luciana.pdf` — Luciana's personalized reading + practice + homework → `Student Materials/Lesson_NN/`
 
 `CLAUDE.md` at the project root is authoritative for student profiles, tone, CEFR targeting, and constraints. Don't restate that brief here — just follow it.
@@ -36,7 +36,7 @@ If the schedule entry is clean and the rotation is balanced, skip the question. 
 
 ## What each artifact contains
 
-Pitch everything to CEFR A1 unless the schedule says otherwise. When in doubt, aim at Luciana's level — she is the slower learner on paper and anxious about English. Camillo's IQ-report accommodations (chunking, visual aids, short dictations, varied evaluation formats) are good defaults for both.
+Pitch everything to CEFR A1 unless the schedule says otherwise. When in doubt, aim at Luciana's level — she is the slower learner on paper and anxious about English. Camilo's IQ-report accommodations (chunking, visual aids, short dictations, varied evaluation formats) are good defaults for both.
 
 ### Lesson_NN_teacher.pdf — instructor lesson plan
 
@@ -47,7 +47,7 @@ One shared document. Shane holds this while teaching. Include:
 - Materials list
 - Five sections, each with minute estimate and language-of-instruction label (Spanish / English / mixed): **Warm-up**, **Teaching**, **Guided Practice**, **Independent Practice**, **Wrap-up**
 - Concrete board-work examples the teacher should write out
-- Differentiation notes: where to lean on Camillo's accommodations, where to buffer Luciana's anxiety (low-stakes openers, no cold-call public reading)
+- Differentiation notes: where to lean on Camilo's accommodations, where to buffer Luciana's anxiety (low-stakes openers, no cold-call public reading)
 - Anticipated A1 Spanish-speaker error patterns for this grammar point, with a one-line fix each
 - Homework line that points to the per-kid materials PDFs
 
@@ -65,7 +65,7 @@ One shared document both kids keep. It is the "cheat sheet" for the grammar poin
 
 File name uses the grammar/topic in upper snake case: `Notes_TO_BE_SHARED.pdf`, `Notes_PRESENT_SIMPLE_SHARED.pdf`, `Notes_ARTICLES_AND_PLURALS_SHARED.pdf`.
 
-### Materials_Camillo.pdf and Materials_Luciana.pdf
+### Materials_Camilo.pdf and Materials_Luciana.pdf
 
 Per-kid independent practice and homework. Tailor to each kid's interests per CLAUDE.md. Each should include:
 
@@ -73,10 +73,10 @@ Per-kid independent practice and homework. Tailor to each kid's interests per CL
 - 4–6 comprehension questions (mix true/false, short answer, multiple choice)
 - A vocabulary box with Latin American Spanish translations for any word above A1
 - A targeted practice worksheet (fill-in, matching, transform, build-a-sentence) drilling the target grammar
-- A short dictation section — especially for Camillo (per his IQ-report recommendation). Luciana benefits from one too.
+- A short dictation section — especially for Camilo (per his IQ-report recommendation). Luciana benefits from one too.
 - A brief homework prompt asking for 3–5 sentences using the target grammar about the kid's own life
 
-Interest cues (from CLAUDE.md): Camillo leans soccer (Real Madrid, Ronaldo), anime, drawing, Bible stories, video games. Luciana leans volleyball, fashion, reggaeton, Catholic faith, friendship, *Lilo & Stitch*, real US-school situations (ordering food, asking a teacher for help, meeting classmates).
+Interest cues (from CLAUDE.md): Camilo leans soccer (Real Madrid, Ronaldo), anime, drawing, Bible stories, video games. Luciana leans volleyball, fashion, reggaeton, Catholic faith, friendship, *Lilo & Stitch*, real US-school situations (ordering food, asking a teacher for help, meeting classmates).
 
 Never use adoption, foster, or biological-family history as topic material. Vary character names across lessons — grep the last few lesson folders if unsure.
 
@@ -96,7 +96,7 @@ Never use adoption, foster, or biological-family history as topic material. Vary
 5. **Render to PDF.** Invoke the `pdf` skill to convert each markdown draft. Output paths:
    - `/Users/shaneorr/Documents/English/Teacher Materials/Lesson_NN_teacher.pdf`
    - `/Users/shaneorr/Documents/English/Student Materials/Lesson_NN/Notes_<TOPIC>_SHARED.pdf`
-   - `/Users/shaneorr/Documents/English/Student Materials/Lesson_NN/Materials_Camillo.pdf`
+   - `/Users/shaneorr/Documents/English/Student Materials/Lesson_NN/Materials_Camilo.pdf`
    - `/Users/shaneorr/Documents/English/Student Materials/Lesson_NN/Materials_Luciana.pdf`
    Create `Student Materials/Lesson_NN/` if it does not exist. `Teacher Materials/` is always flat — no subfolders. If files already exist, confirm before overwriting.
 6. **Upload PDFs to Google Drive.** Two separate Drive destinations — run the bundled script via Bash:
@@ -105,7 +105,7 @@ Never use adoption, foster, or biological-family history as topic material. Vary
    python3 "${CLAUDE_PLUGIN_ROOT}/skills/create-lesson/scripts/upload_to_drive.py" \
      --lesson <N> \
      --student-pdf "/Users/shaneorr/Documents/English/Student Materials/Lesson_NN/Notes_<TOPIC>_SHARED.pdf" \
-     --student-pdf "/Users/shaneorr/Documents/English/Student Materials/Lesson_NN/Materials_Camillo.pdf" \
+     --student-pdf "/Users/shaneorr/Documents/English/Student Materials/Lesson_NN/Materials_Camilo.pdf" \
      --student-pdf "/Users/shaneorr/Documents/English/Student Materials/Lesson_NN/Materials_Luciana.pdf" \
      --teacher-pdf "/Users/shaneorr/Documents/English/Teacher Materials/Lesson_NN_teacher.pdf"
    ```

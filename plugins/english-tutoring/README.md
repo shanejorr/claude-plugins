@@ -1,6 +1,6 @@
 # english-tutoring
 
-Personal Cowork plugin for Shane's at-home English tutoring of Camillo (13) and Luciana (16). Encodes the lesson-creation and progress-tracking workflows used in the project at `/Users/shaneorr/Documents/English`. Both children are CEFR A1 entering Cobb County public schools in August 2026.
+Personal Cowork plugin for Shane's at-home English tutoring of Camilo (13) and Luciana (16). Encodes the lesson-creation and progress-tracking workflows used in the project at `/Users/shaneorr/Documents/English`. Both children are CEFR A1 entering Cobb County public schools in August 2026.
 
 This plugin is project-specific by design — paths, Drive folder IDs, student profiles, and pedagogical conventions live in the project's `CLAUDE.md` and the bundled skills. It is not intended for general distribution.
 
@@ -28,6 +28,6 @@ The skills assume the project layout described in `/Users/shaneorr/Documents/Eng
 
 - `Progress/coverage_tracker.md`, `Progress/vocabulary_log.md`, `Progress/Lesson_Schedule.md`
 - `Teacher Materials/Lesson_NN_teacher.pdf` (flat)
-- `Student Materials/Lesson_NN/` containing `Notes_<TOPIC>_SHARED.pdf`, `Materials_Camillo.pdf`, `Materials_Luciana.pdf`
+- `Student Materials/Lesson_NN/` containing `Notes_<TOPIC>_SHARED.pdf`, `Materials_Camilo.pdf`, `Materials_Luciana.pdf`
 
 If the project layout changes, both SKILL.md files need to be updated to match.

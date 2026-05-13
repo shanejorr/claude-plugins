@@ -6,7 +6,7 @@ What this does
 Given a lesson number and PDF paths, this script uploads to TWO separate
 Google Drive folders:
 
-  1. Student PDFs (Notes_*_SHARED.pdf, Materials_Camillo.pdf,
+  1. Student PDFs (Notes_*_SHARED.pdf, Materials_Camilo.pdf,
      Materials_Luciana.pdf) → STUDENT_FOLDER_ID / Lesson_NN subfolder
   2. Teacher PDF (Lesson_NN_teacher.pdf) → TEACHER_FOLDER_ID (flat, no subfolder)
 
@@ -64,7 +64,7 @@ Usage
   python3 upload_to_drive.py \\
       --lesson 5 \\
       --student-pdf "/Users/shaneorr/Documents/English/Student Materials/Lesson_05/Notes_POSSESSIVES_SHARED.pdf" \\
-      --student-pdf "/Users/shaneorr/Documents/English/Student Materials/Lesson_05/Materials_Camillo.pdf" \\
+      --student-pdf "/Users/shaneorr/Documents/English/Student Materials/Lesson_05/Materials_Camilo.pdf" \\
       --student-pdf "/Users/shaneorr/Documents/English/Student Materials/Lesson_05/Materials_Luciana.pdf" \\
       --teacher-pdf "/Users/shaneorr/Documents/English/Teacher Materials/Lesson_05_teacher.pdf"
 
