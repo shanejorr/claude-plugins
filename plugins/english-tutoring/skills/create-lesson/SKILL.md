@@ -119,7 +119,7 @@ Never use adoption, foster, or biological-family history as topic material. Vary
    - **Student PDFs** (`--student-pdf`) → Drive folder `1yO_leuifYFIMZItGECZ1BaqJ1nI2CJ1F`, inside a `Lesson_NN` subfolder (created if absent).
    - **Teacher PDF** (`--teacher-pdf`) → Drive folder `1eIHmpZ7PQIKBLsi2WPhOcE4ItFOLXr_q`, uploaded flat (no subfolder).
 
-   The script prints a JSON summary with `student_subfolder_url` and `teacher_file_url`. If a file with the same name already exists, it is updated in place so Drive share links stay stable.
+   The script prints a JSON summary. If a file with the same name already exists, it is updated in place so Drive share links stay stable.
 
    **Auth.** Non-interactive service account. The script reads a JSON key from `~/.config/create-lesson/service_account.json`. No browser, no consent flow, no token expiry. If the key is missing, the script exits cleanly and points at the setup walkthrough in its docstring. One-time setup: create a Google Cloud project, enable the Drive API, create a service account, download its JSON key, place it at the path above, and share the target Drive parent folder with the service account's email (as Editor). Full steps are in the script's docstring.
 
@@ -129,8 +129,22 @@ Never use adoption, foster, or biological-family history as topic material. Vary
 
    **Common first-run error.** A `403`/`404` from the Drive API almost always means the parent folder has not been shared with the service account. The script's error message will print the SA's email — share the folder with that address as Editor, then retry.
 
-   Parse the script's JSON output to get `subfolder_url` and include it in the final share message.
-7. **Share the files.** Return all four local paths (as `computer://` links if available), the Drive student subfolder URL, and the Drive teacher file URL. Note for Shane that the teacher plan goes to a separate Drive folder from the student materials. Do **not** update `coverage_tracker.md` or `vocabulary_log.md` — per CLAUDE.md those only get updated after Shane confirms the lesson was taught.
+   Parse the script's JSON output. The two URLs you need downstream are:
+   - `student_subfolder_url` — for the student materials link
+   - `teacher_file.web_view_link` — for the teacher plan link
+7. **Email Jess.** Send the lesson-ready notification. Run the bundled script via Bash; substitute `<N>` (lesson number), `<TEACHER_URL>` (from `teacher_file.web_view_link`), and `<STUDENT_URL>` (from `student_subfolder_url`):
+
+   ```bash
+   python3 "${CLAUDE_PLUGIN_ROOT}/skills/create-lesson/scripts/send_completion_email.py" \
+     --lesson <N> \
+     --teacher-url "<TEACHER_URL>" \
+     --student-url "<STUDENT_URL>"
+   ```
+
+   **Auth.** Gmail SMTP with an app password. The script reads credentials from `~/.config/create-lesson/smtp.json` (same directory as the Drive service-account key). One-time setup: at https://myaccount.google.com/apppasswords, generate a 16-character app password for "Mail," then create `~/.config/create-lesson/smtp.json` with the schema documented in the script's docstring, `chmod 600`.
+
+   **On failure, do not retry blindly.** The lesson is already uploaded; an email error doesn't undo that. Report the error in your final summary and let Shane decide whether to fix config and rerun the script. Common errors: `SMTPAuthenticationError` (regenerate the app password), missing config file (run first-time setup), or a sandboxed network block.
+8. **Share the files.** Return all four local paths (as `computer://` links if available), the Drive student subfolder URL, and the Drive teacher file URL. Note for Shane that the teacher plan goes to a separate Drive folder from the student materials. Confirm the email to Jess was sent (or surface the error if it wasn't). Do **not** update `coverage_tracker.md` or `vocabulary_log.md` — per CLAUDE.md those only get updated after Shane confirms the lesson was taught.
 
 ## What not to do
 
