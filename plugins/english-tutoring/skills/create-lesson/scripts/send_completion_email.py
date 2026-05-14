@@ -15,10 +15,10 @@ service-account key used by upload_to_drive.py, by design.
 
 Config file schema (mode 0600):
   {
-    "smtp_user": "shane.j.orr@gmail.com",
+    "smtp_user": "<your-gmail-address>",
     "smtp_password": "<16-char Gmail app password, no spaces>",
-    "from_email": "shane.j.orr@gmail.com",
-    "to_email":   "jessorr11@gmail.com"
+    "from_email": "<your-gmail-address>",
+    "to_email":   "<recipient-email-address>"
   }
 
 First-time setup
@@ -72,10 +72,10 @@ def load_config() -> dict:
             "Create a Gmail app password at https://myaccount.google.com/apppasswords "
             "(app: Mail), then write the file with this schema:\n"
             '  {\n'
-            '    "smtp_user": "shane.j.orr@gmail.com",\n'
+            '    "smtp_user": "<your-gmail-address>",\n'
             '    "smtp_password": "<16-char app password, no spaces>",\n'
-            '    "from_email": "shane.j.orr@gmail.com",\n'
-            '    "to_email":   "jessorr11@gmail.com"\n'
+            '    "from_email": "<your-gmail-address>",\n'
+            '    "to_email":   "<recipient-email-address>"\n'
             '  }\n'
             f"Then: chmod 600 {SMTP_CONFIG_PATH}"
         )
@@ -95,7 +95,7 @@ def load_config() -> dict:
 def build_message(lesson: int, teacher_url: str, student_url: str, from_email: str, to_email: str) -> EmailMessage:
     subject = f"Lesson {lesson:02d} ready"
     body = (
-        f"Hey h,\n\n"
+        f"Hi,\n\n"
         f"Lesson {lesson:02d} is uploaded to google drive.\n\n"
         f"- Teacher Material {teacher_url}\n"
         f"- Student materials {student_url}\n"
