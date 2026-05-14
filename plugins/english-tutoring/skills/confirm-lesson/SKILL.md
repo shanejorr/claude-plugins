@@ -1,13 +1,13 @@
 ---
 name: confirm-lesson
-description: Confirm that a numbered lesson was actually taught and update the project's progress files for the English tutoring project at /Users/shaneorr/Documents/English. Updates Progress/coverage_tracker.md (grammar covered, interest rotation) and Progress/vocabulary_log.md (master list + by-lesson block) for the named lesson. Trigger when Shane says "confirm lesson N", "confirm-lesson N", "we taught lesson N", "mark lesson N as taught", "update tracker for lesson N", "log lesson N", or any similar phrasing that signals a specific lesson is now done. The lesson number is required.
+description: Confirm that a numbered lesson was actually taught and update the project's progress files for the English tutoring project at /Users/shaneorr/Documents/English. Updates Progress/coverage_tracker.md (grammar covered, interest rotation), Progress/vocabulary_log.md (master list + by-lesson block), and Progress/review_queue.md (per-objective review flags) for the named lesson. Trigger when Shane says "confirm lesson N", "confirm-lesson N", "we taught lesson N", "mark lesson N as taught", "update tracker for lesson N", "log lesson N", or any similar phrasing that signals a specific lesson is now done. The lesson number is required.
 user-invocable: true
 disable-model-invocation: true
 ---
 
 # Confirm Lesson
 
-Per-CLAUDE.md, `Progress/coverage_tracker.md` and `Progress/vocabulary_log.md` are updated **only after Shane confirms a lesson was taught**. This skill is that update step. It takes one parameter — the lesson number — and writes back to both progress files.
+Per-CLAUDE.md, `Progress/coverage_tracker.md`, `Progress/vocabulary_log.md`, and `Progress/review_queue.md` are updated **only after Shane confirms a lesson was taught**. This skill is that update step. It takes one parameter — the lesson number — and writes back to all three progress files.
 
 `CLAUDE.md` at the project root is authoritative. Don't restate it; just follow it.
 
@@ -24,6 +24,7 @@ Before writing anything, gather context from the lesson and the existing tracker
 - `CLAUDE.md` — authoritative brief (tracker columns, vocab-log conventions, never-update-preemptively rule).
 - `Progress/coverage_tracker.md` — current state, including the running interest-rotation tally and any prior entries for this lesson number (in case of a re-confirmation).
 - `Progress/vocabulary_log.md` — current master list and the `### Lesson NN` block (it may already say `_(not yet taught)_`).
+- `Progress/review_queue.md` — current state. You'll need the rows with `Scheduled in Lesson` = NN (to mark them reviewed) and the full list of objectives this lesson covered (to ask the per-objective review question).
 - `Progress/Lesson_Schedule.md` — the planned topic for lesson N. Useful as the default `Grammar / skill` label if the lesson plan is unambiguous.
 - `Teacher Materials/Lesson_NN_teacher.pdf` — the teacher plan. Pull the lesson topic, learning objectives, and any vocabulary the plan called out.
 - `Student Materials/Lesson_NN/Notes_<TOPIC>_SHARED.pdf` — the shared reference sheet (grammar point name, glossary if any).
@@ -42,7 +43,38 @@ After reading the lesson materials, ask Shane for the following in a **single** 
 
 If the user invocation already supplied any of these (e.g., "confirm lesson 5, taught today"), don't re-ask — fill them in and only ask for what's missing.
 
-**Do not ask Shane about how the lesson went, what stuck, what didn't, per-kid status, pacing changes, or items to re-teach.** This skill does not capture subjective lesson-outcome notes.
+**Do not ask Shane about how the lesson went, what stuck, what didn't, per-kid status, or pacing changes in free text.** The only structured outcome signal this skill captures is the per-objective review check below — a yes/no per learning objective, not split by kid, no free-text reasoning.
+
+## Per-objective review check
+
+After the date and rotation question, run a second `AskUserQuestion` call covering the lesson's **learning objectives**. Extract the objectives from `Teacher Materials/Lesson_NN_teacher.pdf` (the teacher plan lists 2–4 measurable learning objectives in its header section). Ask one question per objective — one `AskUserQuestion` call with multiple `questions` entries.
+
+- Question phrasing: `Does "<objective>" need review?`
+- Options: exactly `Yes` and `No`. Use these literal labels so parsing is deterministic.
+- Do **not** split by kid. One question per objective covers both Camilo and Luciana.
+- Do not add a free-text option, "Other", or "Partial". Yes/No only.
+
+For each `Yes` answer, append a row to `Progress/review_queue.md` with:
+
+- **Source Lesson** = NN
+- **Objective** = the objective text, lightly trimmed (drop trailing periods, keep wording verbatim otherwise)
+- **Added on** = today's date (`YYYY-MM-DD`)
+- **Scheduled in Lesson** / **Reviewed in Lesson** / **Reviewed on** = empty
+
+`No` answers create no row.
+
+If the teacher PDF has no clearly enumerated objectives (older lessons may not), tell Shane and ask him to list them — don't fabricate.
+
+## Close out items scheduled for this lesson
+
+Before adding new rows for this lesson's flags, find every row in `Progress/review_queue.md` where **Scheduled in Lesson** = NN. For each:
+
+- Set **Reviewed in Lesson** = NN
+- Set **Reviewed on** = today's date (`YYYY-MM-DD`)
+
+These rows were drilled in this lesson's warm-up by `/create-lesson NN`. Use `Edit` in place — do not rewrite the file. Do not touch rows that already have a value in `Reviewed in Lesson` — those are historical record.
+
+If no rows are scheduled for NN (e.g., this is lesson 1, or the queue was empty when `/create-lesson NN` ran, or `/create-lesson` wasn't used to build this lesson), skip this step silently.
 
 ## Updates to `Progress/coverage_tracker.md`
 
@@ -107,16 +139,37 @@ Words that were *re-glossed* (already in the master list) should be listed here 
 
 Don't touch the `Quick-reference: words both kids should know cold` section automatically. Per CLAUDE.md, words move there only after being recycled in at least two lessons *and* used correctly in writing or speaking. That's a judgment call Shane makes; if he says "promote X and Y to the quick-reference list," do that. Otherwise leave it alone.
 
+## Updates to `Progress/review_queue.md`
+
+Two distinct edits, both in place. Use `Edit`, not `Write`.
+
+### 1. Close out scheduled rows
+
+For every row where `Scheduled in Lesson` = NN, fill in `Reviewed in Lesson` = NN and `Reviewed on` = today's date. (See "Close out items scheduled for this lesson" above.)
+
+### 2. Append new pending rows
+
+For each `Yes` answer from the per-objective review check, append one row to the **Items** table:
+
+```
+| NN | <objective text> | YYYY-MM-DD | | | |
+```
+
+The last three columns (`Scheduled in Lesson`, `Reviewed in Lesson`, `Reviewed on`) are intentionally blank — `/create-lesson` will fill in `Scheduled in Lesson` when it builds the next lesson's warm-up.
+
+If the table still contains the placeholder row `_(none yet)_`, replace it with the first real entry rather than appending below it.
+
 ## Workflow
 
 1. **Resolve the lesson number.** Zero-pad. Confirm the corresponding folder and teacher PDF exist; bail with a clear message if not.
-2. **Read inputs.** `CLAUDE.md`, both progress files, the schedule entry, and the three lesson PDFs (teacher plan, shared notes, per-kid materials). Use the `pdf` skill for the PDFs.
-3. **Extract** the grammar/skill label, the lesson topic, and the full glossed-vocabulary list (EN, ES-LatAm, part of speech, source).
+2. **Read inputs.** `CLAUDE.md`, all three progress files (`coverage_tracker.md`, `vocabulary_log.md`, `review_queue.md`), the schedule entry, and the three lesson PDFs (teacher plan, shared notes, per-kid materials). Use the `pdf` skill for the PDFs.
+3. **Extract** the grammar/skill label, the lesson topic, the full glossed-vocabulary list (EN, ES-LatAm, part of speech, source), and the **learning objectives** from the teacher PDF.
 4. **Ask Shane** for the items in *Information to gather* via a single `AskUserQuestion` call. Skip anything already supplied in the invoking message.
-5. **Compute the diffs** for both files in your head before writing — placeholder replacements, new rows, balance increments.
-6. **Summarize the planned edits in one block, then apply them.** List the grammar row, vocabulary additions/updates, and rotation increment, then proceed to step 7 in the same turn. Pause only if a planned edit conflicts with an existing row — for example, a re-confirmation that would duplicate a `Lesson NN` entry already in the grammar table.
-7. **Apply edits** with `Edit`. Do **not** use `Write` — these files are living docs and rewriting them from scratch loses formatting. Use `Edit` with enough surrounding context to make each `old_string` unique.
-8. **Confirm** what was written: list the rows added/changed in each file, and report the new running-balance line.
+5. **Ask the per-objective review question** as a second `AskUserQuestion` call — one question per learning objective, Yes/No only. (See "Per-objective review check.")
+6. **Compute the diffs** for all three files in your head before writing — placeholder replacements, new rows, balance increments, close-outs of `Scheduled in Lesson` = NN rows, and new pending review rows for each `Yes`.
+7. **Summarize the planned edits in one block, then apply them.** List the grammar row, vocabulary additions/updates, rotation increment, review-queue close-outs, and review-queue new rows, then proceed to step 8 in the same turn. Pause only if a planned edit conflicts with an existing row — for example, a re-confirmation that would duplicate a `Lesson NN` entry already in the grammar table.
+8. **Apply edits** with `Edit`. Do **not** use `Write` — these files are living docs and rewriting them from scratch loses formatting. Use `Edit` with enough surrounding context to make each `old_string` unique.
+9. **Confirm** what was written: list the rows added/changed in each file, report the new running-balance line, and call out which review items were closed out and which new items entered the queue.
 
 ## Edge cases
 
@@ -125,12 +178,18 @@ Don't touch the `Quick-reference: words both kids should know cold` section auto
 - **No new vocabulary.** Some lessons drill structure with already-known words. That's fine — add nothing to the master list, and the by-lesson block can read `- (no new words; reviewed: <list>)`.
 - **Shared materials with no clear featured interest.** Tag `S` (genuinely shared). Don't force `L` or `C`.
 - **Lesson folder exists but PDFs are still markdown drafts.** This means the lesson was authored but not rendered/printed. Ask Shane whether to proceed using the markdown drafts or to wait — don't silently use drafts.
+- **Teacher PDF has no clearly enumerated learning objectives.** Skip the per-objective review question and ask Shane to dictate the objectives (or accept that this lesson contributes nothing to the review queue). Don't invent objectives just to ask the question.
+- **Re-confirmation of a lesson already in the tracker.** For the review queue specifically: any rows you previously appended with `Source Lesson` = NN remain (they're append-only). Don't delete or rewrite them. Close-outs of `Scheduled in Lesson` = NN rows are idempotent (re-writing today's date is fine).
 
 ## What not to do
 
-- Don't update either file before Shane confirms the lesson was taught — this skill *is* the confirmation step, but if invoked without a clear "we taught this," ask first.
-- Don't ask Shane for or record subjective lesson-outcome notes (what stuck, what didn't, per-kid status, pacing changes, review-queue items). That functionality has been removed.
+- Don't update any tracker file before Shane confirms the lesson was taught — this skill *is* the confirmation step, but if invoked without a clear "we taught this," ask first.
+- Don't ask Shane for free-text lesson-outcome notes (what stuck, what didn't, per-kid status, pacing changes). The only structured outcome signal is the per-objective Yes/No question — nothing else.
+- Don't ask the review question separately for Camilo and Luciana. One question per objective covers both.
+- Don't free-text Shane's reasoning. Yes/No only.
+- Don't touch `Reviewed in Lesson` rows in `review_queue.md` that already have a value. They're historical record.
+- Don't delete review-queue rows. The table is append-only.
 - Don't promote words into the `Quick-reference` section unprompted.
-- Don't rewrite either tracker file from scratch with `Write`. Edit in place.
-- Don't fabricate a topic, grammar point, or vocabulary if the lesson PDFs are missing. Stop and tell Shane.
+- Don't rewrite any tracker file from scratch with `Write`. Edit in place.
+- Don't fabricate a topic, grammar point, vocabulary, or learning objectives if the lesson PDFs are missing or unclear. Stop and tell Shane.
 - Don't touch `Progress/Lesson_Schedule.md` from this skill. Schedule edits are a separate, deliberate action.
