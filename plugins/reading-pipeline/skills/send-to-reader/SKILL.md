@@ -1,6 +1,6 @@
 ---
 name: send-to-reader
-description: "Upload a PDF, EPUB, or KEPUB file to the user's Google Drive folder that syncs to their e-reader (Kobo Color or reMarkable Paper Pro). Use this skill whenever the user wants to send a document to their e-reader, sync a file to Kobo or reMarkable, or 'put this on my e-reader'. Trigger phrases include 'send to my Kobo', 'send to my reMarkable', 'sync this to my e-reader', 'upload this to my reader', or any time the user has a .pdf / .epub / .kepub.epub file and mentions Kobo, reMarkable, or Google Drive sync. Asks which device if not specified."
+description: "Upload a file to the user's Google Drive folder that syncs to their e-reader (Kobo Color or reMarkable Paper Pro). Accepts ready-to-go .pdf / .epub / .kepub.epub files, OR .txt / .md files that this skill will auto-convert into the right format for the chosen device (KEPUB for Kobo, EPUB for reMarkable). Use this skill whenever the user wants to send a document to their e-reader, sync a file to Kobo or reMarkable, or 'put this on my e-reader'. Trigger phrases include 'send to my Kobo', 'send to my reMarkable', 'sync this to my e-reader', 'upload this to my reader', 'send this text file to my Kobo/reMarkable'. Asks which device if not specified."
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -9,21 +9,22 @@ disable-model-invocation: true
 
 ## Purpose
 
-Upload a `.pdf`, `.epub`, or `.kepub.epub` file to a Google Drive folder that syncs to one of the user's e-readers:
+Upload a file to a Google Drive folder that syncs to one of the user's e-readers:
 
 - **Kobo Color**
 - **reMarkable Paper Pro**
+
+Accepts e-reader-ready files (`.pdf`, `.epub`, `.kepub.epub`) directly, and also accepts plain text / Markdown (`.txt`, `.md`) — in which case this skill converts them to the right format for the target device before uploading.
 
 Each device watches its own Drive folder. Folder IDs live in a gitignored config file (`config/folders.json`) so they can be shared on a public marketplace without leaking personal Drive locations.
 
 ## Step 1: Confirm the Input File
 
 Verify the file exists and has a supported extension. Acceptable:
-- `.pdf`
-- `.epub`
-- `.kepub.epub`
+- `.pdf`, `.epub`, `.kepub.epub` — uploaded as-is.
+- `.txt`, `.md` — auto-converted in Step 3 before upload.
 
-If the file is none of these, tell the user and stop. If they want to convert something to EPUB or KEPUB first, point them to the `convert-to-epub` skill.
+If the file is something else, tell the user and stop.
 
 ## Step 2: Confirm the Target Device
 
@@ -31,7 +32,37 @@ If the user did not specify which device to send to, **ask**: Kobo or reMarkable
 
 The script accepts the device key (`kobo` or `remarkable`) and looks up the folder ID in `<skill-dir>/config/folders.json`.
 
-## Step 3: Upload via Google Drive API
+## Step 3: Convert if Needed (.txt / .md only)
+
+If the input is `.txt` or `.md`, convert it to the device-appropriate e-book format before upload:
+
+- **Kobo** → `.kepub.epub` (unlocks Kobo reading stats, annotations, and improved typography)
+- **reMarkable** → `.epub`
+
+Install dependencies once:
+
+```bash
+pip install ebooklib markdown --break-system-packages
+```
+
+Run the bundled converter from the sibling `convert-to-epub` skill. The output path's extension drives the format (`.kepub.epub` → KEPUB, `.epub` → EPUB):
+
+```bash
+# Kobo
+python <plugin-root>/skills/convert-to-epub/scripts/md_to_epub.py <input.txt|input.md> /tmp/<basename>.kepub.epub
+
+# reMarkable
+python <plugin-root>/skills/convert-to-epub/scripts/md_to_epub.py <input.txt|input.md> /tmp/<basename>.epub --format epub
+```
+
+Notes:
+- Derive `<basename>` as a snake_case version of the input filename, under ~60 chars.
+- The script auto-detects the title from the first `# Heading` and the author from a `**Author(s):**` line. Override with `--title` / `--author` only if the user asks.
+- For `.pdf`/`.epub`/`.kepub.epub` inputs, skip this step entirely.
+
+Then use the converted file as the upload target in Step 4.
+
+## Step 4: Upload via Google Drive API
 
 Install dependencies once:
 
@@ -52,7 +83,7 @@ The script:
 
 After the first successful run, subsequent uploads are non-interactive.
 
-## Step 4: First-Time Setup
+## Step 5: First-Time Setup
 
 If `config/folders.json` or `credentials/gdrive_credentials.json` is missing, the script prints a targeted error pointing to the example template. Walk the user through this once:
 
@@ -77,7 +108,7 @@ The script surfaces specific, actionable messages:
 
 If you (the model) see one of these messages, relay the exact remediation to the user — don't just say "upload failed."
 
-## Step 5: Confirm
+## Step 6: Confirm
 
 After a successful upload, report briefly:
 - The filename
