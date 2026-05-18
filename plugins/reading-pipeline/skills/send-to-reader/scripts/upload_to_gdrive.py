@@ -2,9 +2,17 @@
 """
 Upload a file to a specific Google Drive folder using the Google Drive API.
 
-Folder IDs are read from a sibling config file (config/folders.json) keyed by
-device name (e.g. "kobo", "remarkable") so personal folder IDs do not live in
-this script and can be gitignored.
+Folder IDs are read from a `folders.json` file keyed by device name (e.g.
+"kobo", "remarkable") so personal folder IDs do not live in this script.
+The script looks for the file in this order:
+
+    1. --folders-config PATH                       (CLI flag)
+    2. $READING_PIPELINE_FOLDERS_CONFIG            (environment variable)
+    3. ~/.config/send-to-reader/folders.json       (preferred — survives plugin upgrades)
+    4. <skill>/config/folders.json                 (legacy in-tree location)
+
+The user-config path is preferred because the in-tree copy is wiped
+whenever the plugin is reinstalled or upgraded.
 
 OAuth credentials and the cached refresh token live in a shared, out-of-tree
 directory: `~/.config/gdrive-oauth/`. The same credentials and token are used
@@ -25,8 +33,12 @@ Setup:
     5. Create OAuth 2.0 credentials of type "Desktop app"
     6. Download the credentials JSON and save it as
        ~/.config/gdrive-oauth/gdrive_credentials.json
-    7. Copy <skill-dir>/config/folders.example.json to folders.json and fill in
-       your folder IDs
+    7. Copy <skill-dir>/config/folders.example.json into your user-config
+       directory and fill in your folder IDs:
+           mkdir -p ~/.config/send-to-reader
+           cp config/folders.example.json ~/.config/send-to-reader/folders.json
+       (The user-config path is preferred over the in-tree config/ path
+       because the latter is wiped on plugin upgrade.)
     8. On first run, a browser opens for OAuth consent. The token is then
        cached in ~/.config/gdrive-oauth/gdrive_token.pickle for reuse.
 """
@@ -58,17 +70,39 @@ DEFAULT_CREDENTIALS_PATH = os.path.expanduser(
 DEFAULT_TOKEN_PATH = os.path.expanduser(
     "~/.config/gdrive-oauth/gdrive_token.pickle"
 )
-DEFAULT_FOLDERS_CONFIG = os.path.join(SKILL_DIR, "config", "folders.json")
+USER_CONFIG_FOLDERS = os.path.expanduser("~/.config/send-to-reader/folders.json")
+INTREE_FOLDERS_CONFIG = os.path.join(SKILL_DIR, "config", "folders.json")
 EXAMPLE_FOLDERS_CONFIG = os.path.join(SKILL_DIR, "config", "folders.example.json")
+
+
+def resolve_folders_config(cli_value):
+    """Pick the folders.json path: CLI > env var > user-config > in-tree.
+
+    Returns the first path that exists, or the highest-priority default
+    so error messages point at the preferred location.
+    """
+    if cli_value:
+        return cli_value
+    env_value = os.environ.get("READING_PIPELINE_FOLDERS_CONFIG")
+    if env_value:
+        return env_value
+    if os.path.exists(USER_CONFIG_FOLDERS):
+        return USER_CONFIG_FOLDERS
+    if os.path.exists(INTREE_FOLDERS_CONFIG):
+        return INTREE_FOLDERS_CONFIG
+    return USER_CONFIG_FOLDERS
 
 
 def resolve_folder_id(device: str, folders_config_path: str) -> str:
     if not os.path.exists(folders_config_path):
         print(f"ERROR: Folders config not found at {folders_config_path}")
         print(f"Copy the template and fill in your folder IDs:")
-        print(f"  cp {EXAMPLE_FOLDERS_CONFIG} {folders_config_path}")
+        print(f"  mkdir -p {os.path.dirname(USER_CONFIG_FOLDERS)}")
+        print(f"  cp {EXAMPLE_FOLDERS_CONFIG} {USER_CONFIG_FOLDERS}")
         print(f"Then open each device's Drive folder in a browser and copy the")
         print(f"folder ID (the last segment of the URL) into the JSON.")
+        print(f"The user-config path above is preferred — the in-tree plugin")
+        print(f"config is wiped on every plugin upgrade.")
         sys.exit(1)
 
     with open(folders_config_path, "r") as f:
@@ -146,9 +180,10 @@ def upload_file(
         if status in ("404", 404):
             print(
                 f"ERROR: Google Drive folder '{folder_id}' (device: {device_label}) "
-                f"was not found. Edit {DEFAULT_FOLDERS_CONFIG} and replace the "
-                f"'{device_label}' value with a valid folder ID, or check that the "
-                f"OAuth account you authorized actually has access to that folder."
+                f"was not found. Edit your folders.json (see --folders-config) and "
+                f"replace the '{device_label}' value with a valid folder ID, or "
+                f"check that the OAuth account you authorized actually has access "
+                f"to that folder."
             )
             sys.exit(1)
         if status in ("403", 403):
@@ -156,7 +191,8 @@ def upload_file(
                 f"ERROR: Permission denied uploading to folder '{folder_id}' "
                 f"(device: {device_label}). The OAuth account you authorized may "
                 f"not have write access to that folder. Re-share the folder, "
-                f"or update {DEFAULT_FOLDERS_CONFIG} with a folder you own."
+                f"or update your folders.json (see --folders-config) with a "
+                f"folder you own."
             )
             sys.exit(1)
         raise
@@ -182,8 +218,12 @@ def main():
     )
     parser.add_argument(
         "--folders-config",
-        default=DEFAULT_FOLDERS_CONFIG,
-        help=f"Path to folders.json (default: {DEFAULT_FOLDERS_CONFIG})",
+        default=None,
+        help=(
+            "Path to folders.json. If omitted, the script searches: "
+            "$READING_PIPELINE_FOLDERS_CONFIG → "
+            f"{USER_CONFIG_FOLDERS} → {INTREE_FOLDERS_CONFIG}"
+        ),
     )
     parser.add_argument(
         "--credentials",
@@ -202,7 +242,8 @@ def main():
         sys.exit(1)
 
     if args.device:
-        folder_id = resolve_folder_id(args.device, args.folders_config)
+        folders_config_path = resolve_folders_config(args.folders_config)
+        folder_id = resolve_folder_id(args.device, folders_config_path)
         device_label = args.device
     else:
         folder_id = args.folder_id

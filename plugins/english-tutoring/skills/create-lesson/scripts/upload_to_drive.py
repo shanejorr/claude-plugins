@@ -10,10 +10,18 @@ Google Drive folders:
      Materials_Luciana.pdf) → student parent folder / Lesson_NN subfolder
   2. Teacher PDF (Lesson_NN_teacher.pdf) → teacher folder (flat, no subfolder)
 
-Parent folder IDs are read from a sibling `config/folders.json` keyed by
-role (`student`, `teacher`) so personal folder IDs do not live in this
-script and can be gitignored. Copy `config/folders.example.json` to
-`config/folders.json` and fill in the IDs.
+Parent folder IDs are read from a `folders.json` file keyed by role
+(`student`, `teacher`) so personal folder IDs do not live in this
+script. The script looks for that file in this order:
+
+  1. `--folders-config PATH` (CLI flag)
+  2. `$ENGLISH_TUTORING_FOLDERS_CONFIG` environment variable
+  3. `~/.config/create-lesson/folders.json`  (preferred — survives plugin upgrades)
+  4. `<skill>/config/folders.json`           (legacy in-tree location)
+
+Copy `config/folders.example.json` to one of those paths and fill in
+the IDs. The user-config path (#3) is preferred because the in-tree
+copy is wiped whenever the plugin is reinstalled or upgraded.
 
 If a file with the same name already exists in the target location, its
 contents are updated in place so Drive share links stay stable.
@@ -44,8 +52,12 @@ First-time setup (one-time, on this Mac)
   5. APIs & Services > Credentials > Create Credentials > OAuth client ID
      > application type "Desktop app". Download the JSON.
   6. Save it as ~/.config/gdrive-oauth/gdrive_credentials.json.
-  7. Copy this skill's folders template and fill in your folder IDs:
-       cp config/folders.example.json config/folders.json
+  7. Copy this skill's folders template into your user-config dir and
+     fill in your folder IDs:
+       mkdir -p ~/.config/create-lesson
+       cp config/folders.example.json ~/.config/create-lesson/folders.json
+     (The user-config path is preferred over the in-tree config/ path
+     because the latter is wiped on plugin upgrade.)
   8. Run the script. A browser window opens for OAuth consent. The
      refresh token is then cached as gdrive_token.pickle.
 
@@ -105,10 +117,29 @@ DEFAULT_TOKEN_PATH = os.path.expanduser(
 )
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_FOLDERS_CONFIG = str(SKILL_DIR / "config" / "folders.json")
+USER_CONFIG_FOLDERS = os.path.expanduser("~/.config/create-lesson/folders.json")
+INTREE_FOLDERS_CONFIG = str(SKILL_DIR / "config" / "folders.json")
 EXAMPLE_FOLDERS_CONFIG = str(SKILL_DIR / "config" / "folders.example.json")
 
 FOLDER_MIME = "application/vnd.google-apps.folder"
+
+
+def resolve_folders_config(cli_value: str | None) -> str:
+    """Pick the folders.json path: CLI > env var > user-config > in-tree.
+
+    Returns the first path that exists, or the highest-priority default
+    so error messages point the user at the preferred location.
+    """
+    if cli_value:
+        return cli_value
+    env_value = os.environ.get("ENGLISH_TUTORING_FOLDERS_CONFIG")
+    if env_value:
+        return env_value
+    if os.path.exists(USER_CONFIG_FOLDERS):
+        return USER_CONFIG_FOLDERS
+    if os.path.exists(INTREE_FOLDERS_CONFIG):
+        return INTREE_FOLDERS_CONFIG
+    return USER_CONFIG_FOLDERS
 
 
 def load_folders(folders_config_path: str) -> tuple[str, str]:
@@ -117,9 +148,12 @@ def load_folders(folders_config_path: str) -> tuple[str, str]:
         sys.exit(
             f"Folders config not found at {folders_config_path}.\n"
             f"Copy the template and fill in your folder IDs:\n"
-            f"  cp {EXAMPLE_FOLDERS_CONFIG} {folders_config_path}\n"
+            f"  mkdir -p {os.path.dirname(USER_CONFIG_FOLDERS)}\n"
+            f"  cp {EXAMPLE_FOLDERS_CONFIG} {USER_CONFIG_FOLDERS}\n"
             f"Open each Drive folder in a browser and copy the folder ID "
-            f"(the last segment of the URL) into the JSON."
+            f"(the last segment of the URL) into the JSON.\n"
+            f"The user-config path above is preferred — the in-tree "
+            f"plugin config is wiped on every plugin upgrade."
         )
 
     with open(folders_config_path, "r") as f:
@@ -280,7 +314,7 @@ def drive_hint(status) -> str:
             "\nHint: a 403/404 here usually means the OAuth account you "
             "authorized does not have access to the target Drive folder. "
             "Either re-share the folder with that account, or update "
-            "config/folders.json with a folder you own."
+            "your folders.json (see --folders-config) with a folder you own."
         )
     return ""
 
@@ -317,8 +351,12 @@ def main() -> int:
     )
     parser.add_argument(
         "--folders-config",
-        default=DEFAULT_FOLDERS_CONFIG,
-        help=f"Path to folders.json (default: {DEFAULT_FOLDERS_CONFIG})",
+        default=None,
+        help=(
+            "Path to folders.json. If omitted, the script searches: "
+            "$ENGLISH_TUTORING_FOLDERS_CONFIG → "
+            f"{USER_CONFIG_FOLDERS} → {INTREE_FOLDERS_CONFIG}"
+        ),
     )
     parser.add_argument(
         "--credentials",
@@ -346,7 +384,8 @@ def main() -> int:
     if missing:
         sys.exit("Missing file(s):\n  " + "\n  ".join(str(p) for p in missing))
 
-    student_parent_id, teacher_folder_id = load_folders(args.folders_config)
+    folders_config_path = resolve_folders_config(args.folders_config)
+    student_parent_id, teacher_folder_id = load_folders(folders_config_path)
 
     creds = get_credentials(args.credentials, args.token)
     service = build("drive", "v3", credentials=creds, cache_discovery=False)
