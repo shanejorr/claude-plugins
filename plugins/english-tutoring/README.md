@@ -22,9 +22,9 @@ Trigger phrases: "confirm lesson N", "we taught lesson N", "mark lesson N as tau
 
 ## Bundled scripts
 
-`skills/create-lesson/scripts/upload_to_drive.py` uploads lesson PDFs to Google Drive using a service-account credential at `~/.config/create-lesson/service_account.json`. The full one-time setup (creating the service account, sharing the Drive folders with it) is documented in the script's docstring. Dependencies: `google-api-python-client`, `google-auth-httplib2`.
+`skills/create-lesson/scripts/upload_to_drive.py` uploads lesson PDFs to Google Drive using an OAuth 2.0 Desktop-app credential at `~/.config/gdrive-oauth/gdrive_credentials.json`, with the cached refresh token at `~/.config/gdrive-oauth/gdrive_token.pickle`. The OAuth credentials are **shared** with the `reading-pipeline` plugin's `send-to-reader` skill — one consent flow covers both. The full one-time setup is documented in the script's docstring. Destination folder IDs live in `skills/create-lesson/config/folders.json` (gitignored). Dependencies: `google-api-python-client`, `google-auth-httplib2`, `google-auth-oauthlib`.
 
-Files uploaded this way are owned by the service account, not by Shane — they appear in his Drive via the shared parent folders but show the service-account email in the Owner column. Re-uploads update the existing file in place, so Drive share links stay stable.
+Files uploaded this way are owned by your Google account. Re-uploads update the existing file in place, so Drive share links stay stable.
 
 ## Project assumptions
 

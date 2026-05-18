@@ -6,8 +6,10 @@ Folder IDs are read from a sibling config file (config/folders.json) keyed by
 device name (e.g. "kobo", "remarkable") so personal folder IDs do not live in
 this script and can be gitignored.
 
-OAuth credentials and the cached refresh token live in a sibling
-`credentials/` directory (also gitignored).
+OAuth credentials and the cached refresh token live in a shared, out-of-tree
+directory: `~/.config/gdrive-oauth/`. The same credentials and token are used
+by the `english-tutoring` plugin's `create-lesson` skill, so OAuth consent
+only happens once.
 
 Usage:
     python upload_to_gdrive.py <file_path> --device kobo
@@ -15,15 +17,18 @@ Usage:
     python upload_to_gdrive.py <file_path> --folder-id <FOLDER_ID>   # explicit override
 
 Setup:
-    1. Go to https://console.cloud.google.com/
-    2. Create a project (or use existing) and enable the Google Drive API
-    3. Create OAuth 2.0 credentials of type "Desktop app"
-    4. Download the credentials JSON and save it as
-       <skill-dir>/credentials/gdrive_credentials.json
-    5. Copy <skill-dir>/config/folders.example.json to folders.json and fill in
+    1. mkdir -p ~/.config/gdrive-oauth && chmod 700 ~/.config/gdrive-oauth
+    2. Go to https://console.cloud.google.com/
+    3. Create a project (or use existing) and enable the Google Drive API
+    4. APIs & Services > OAuth consent screen: include the scope
+       `https://www.googleapis.com/auth/drive`
+    5. Create OAuth 2.0 credentials of type "Desktop app"
+    6. Download the credentials JSON and save it as
+       ~/.config/gdrive-oauth/gdrive_credentials.json
+    7. Copy <skill-dir>/config/folders.example.json to folders.json and fill in
        your folder IDs
-    6. On first run, a browser opens for OAuth consent. The token is then
-       cached in <skill-dir>/credentials/gdrive_token.pickle for reuse.
+    8. On first run, a browser opens for OAuth consent. The token is then
+       cached in ~/.config/gdrive-oauth/gdrive_token.pickle for reuse.
 """
 
 import argparse
@@ -44,11 +49,15 @@ except ImportError:
     print("  pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib --break-system-packages")
     sys.exit(1)
 
-SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_CREDENTIALS_PATH = os.path.join(SKILL_DIR, "credentials", "gdrive_credentials.json")
-DEFAULT_TOKEN_PATH = os.path.join(SKILL_DIR, "credentials", "gdrive_token.pickle")
+DEFAULT_CREDENTIALS_PATH = os.path.expanduser(
+    "~/.config/gdrive-oauth/gdrive_credentials.json"
+)
+DEFAULT_TOKEN_PATH = os.path.expanduser(
+    "~/.config/gdrive-oauth/gdrive_token.pickle"
+)
 DEFAULT_FOLDERS_CONFIG = os.path.join(SKILL_DIR, "config", "folders.json")
 EXAMPLE_FOLDERS_CONFIG = os.path.join(SKILL_DIR, "config", "folders.example.json")
 
@@ -93,8 +102,7 @@ def get_credentials(credentials_path: str, token_path: str) -> Credentials:
         else:
             if not os.path.exists(credentials_path):
                 print(f"ERROR: OAuth credentials file not found at {credentials_path}")
-                print("See the setup instructions in this script's docstring or in")
-                print(f"  {os.path.join(SKILL_DIR, 'credentials', 'README.md')}")
+                print("See the setup instructions in this script's docstring.")
                 sys.exit(1)
             flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
             creds = flow.run_local_server(port=0)

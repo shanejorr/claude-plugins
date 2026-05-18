@@ -10,8 +10,7 @@ fixed by Shane's template — no signature, no banner, no HTML alternative.
 Auth
 ----
 Gmail SMTP with an app password. The script reads credentials from
-~/.config/create-lesson/smtp.json — same directory as the Drive
-service-account key used by upload_to_drive.py, by design.
+~/.config/create-lesson/smtp.json.
 
 Config file schema (mode 0600):
   {

@@ -137,18 +137,16 @@ Never use adoption, foster, or biological-family history as topic material. Vary
      --teacher-pdf "/Users/shaneorr/Documents/English/Teacher Materials/Lesson_NN_teacher.pdf"
    ```
 
-   - **Student PDFs** (`--student-pdf`) → Drive folder `1yO_leuifYFIMZItGECZ1BaqJ1nI2CJ1F`, inside a `Lesson_NN` subfolder (created if absent).
-   - **Teacher PDF** (`--teacher-pdf`) → Drive folder `1eIHmpZ7PQIKBLsi2WPhOcE4ItFOLXr_q`, uploaded flat (no subfolder).
+   - **Student PDFs** (`--student-pdf`) → the `student` parent folder from `config/folders.json`, inside a `Lesson_NN` subfolder (created if absent).
+   - **Teacher PDF** (`--teacher-pdf`) → the `teacher` folder from `config/folders.json`, uploaded flat (no subfolder).
 
    The script prints a JSON summary. If a file with the same name already exists, it is updated in place so Drive share links stay stable.
 
-   **Auth.** Non-interactive service account. The script reads a JSON key from `~/.config/create-lesson/service_account.json`. No browser, no consent flow, no token expiry. If the key is missing, the script exits cleanly and points at the setup walkthrough in its docstring. One-time setup: create a Google Cloud project, enable the Drive API, create a service account, download its JSON key, place it at the path above, and share the target Drive parent folder with the service account's email (as Editor). Full steps are in the script's docstring.
+   **Auth.** OAuth 2.0 Desktop app. The script reads OAuth client credentials from `~/.config/gdrive-oauth/gdrive_credentials.json` and caches a refresh token at `~/.config/gdrive-oauth/gdrive_token.pickle`. First run opens a browser for OAuth consent; subsequent runs are non-interactive. Setup is **shared** with the `reading-pipeline` plugin's `send-to-reader` skill — same credentials file, same cached token. If the credentials file is missing, the script exits cleanly and points at the setup walkthrough in its docstring.
 
-   **Expected ownership quirk.** Files uploaded by the service account are *owned* by the service account, not by Shane. They appear in his Drive via the shared parent folder, but the Owner column shows the SA email. For regenerable lesson PDFs this is fine; flag it only if Shane asks why ownership looks odd.
+   **Dependencies.** The script needs `google-api-python-client`, `google-auth-httplib2`, and `google-auth-oauthlib`. If the script bails on `ImportError`, install them with `pip install --break-system-packages google-api-python-client google-auth-httplib2 google-auth-oauthlib` and retry.
 
-   **Dependencies.** The script needs `google-api-python-client` and `google-auth-httplib2`. If the script bails on `ImportError`, install them with `pip install --break-system-packages google-api-python-client google-auth-httplib2` and retry.
-
-   **Common first-run error.** A `403`/`404` from the Drive API almost always means the parent folder has not been shared with the service account. The script's error message will print the SA's email — share the folder with that address as Editor, then retry.
+   **Common first-run error.** A `403`/`404` from the Drive API usually means the OAuth account you authorized does not have access to the target Drive folder. Either re-share the folder with that Google account, or update `config/folders.json` with a folder you own.
 
    Parse the script's JSON output. The two URLs you need downstream are:
    - `student_subfolder_url` — for the student materials link
@@ -162,7 +160,7 @@ Never use adoption, foster, or biological-family history as topic material. Vary
      --student-url "<STUDENT_URL>"
    ```
 
-   **Auth.** Gmail SMTP with an app password. The script reads credentials from `~/.config/create-lesson/smtp.json` (same directory as the Drive service-account key). One-time setup: at https://myaccount.google.com/apppasswords, generate a 16-character app password for "Mail," then create `~/.config/create-lesson/smtp.json` with the schema documented in the script's docstring, `chmod 600`.
+   **Auth.** Gmail SMTP with an app password. The script reads credentials from `~/.config/create-lesson/smtp.json`. One-time setup: at https://myaccount.google.com/apppasswords, generate a 16-character app password for "Mail," then create `~/.config/create-lesson/smtp.json` with the schema documented in the script's docstring, `chmod 600`.
 
    **Recipients.** `to_email` in the config is the primary recipient (Jess). The optional `cc_emails` list cc's additional addresses on every send — Shane's address belongs here so he gets a copy of what Jess receives.
 
