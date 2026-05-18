@@ -18,8 +18,12 @@ Config file schema (mode 0600):
     "smtp_user": "<your-gmail-address>",
     "smtp_password": "<16-char Gmail app password, no spaces>",
     "from_email": "<your-gmail-address>",
-    "to_email":   "<recipient-email-address>"
+    "to_email":   "<recipient-email-address>",
+    "cc_emails":  ["<optional-cc-address>", ...]
   }
+
+`cc_emails` is optional. Provide a list of addresses to copy on every
+notification (e.g. so Shane gets a copy of what was sent to Jess).
 
 First-time setup
 ----------------
@@ -89,10 +93,23 @@ def load_config() -> dict:
             f"SMTP config at {SMTP_CONFIG_PATH} is missing required keys: "
             f"{', '.join(missing)}"
         )
+    cc = config.get("cc_emails", [])
+    if cc and not (isinstance(cc, list) and all(isinstance(x, str) and x.strip() for x in cc)):
+        sys.exit(
+            f"SMTP config at {SMTP_CONFIG_PATH}: 'cc_emails' must be a list of "
+            "non-empty strings if present."
+        )
     return config
 
 
-def build_message(lesson: int, teacher_url: str, student_url: str, from_email: str, to_email: str) -> EmailMessage:
+def build_message(
+    lesson: int,
+    teacher_url: str,
+    student_url: str,
+    from_email: str,
+    to_email: str,
+    cc_emails: list[str] | None = None,
+) -> EmailMessage:
     subject = f"Lesson {lesson:02d} ready"
     body = (
         f"Hi,\n\n"
@@ -104,6 +121,8 @@ def build_message(lesson: int, teacher_url: str, student_url: str, from_email: s
     msg["Subject"] = subject
     msg["From"] = from_email
     msg["To"] = to_email
+    if cc_emails:
+        msg["Cc"] = ", ".join(cc_emails)
     msg.set_content(body)
     return msg
 
@@ -126,12 +145,14 @@ def main() -> int:
         sys.exit("--student-url must be a non-empty URL.")
 
     config = load_config()
+    cc_emails = config.get("cc_emails", [])
     msg = build_message(
         lesson=args.lesson,
         teacher_url=args.teacher_url.strip(),
         student_url=args.student_url.strip(),
         from_email=config["from_email"],
         to_email=config["to_email"],
+        cc_emails=cc_emails,
     )
 
     try:
@@ -154,6 +175,7 @@ def main() -> int:
     print(json.dumps({
         "status": "sent",
         "to": config["to_email"],
+        "cc": cc_emails,
         "subject": msg["Subject"],
     }, indent=2))
     return 0
